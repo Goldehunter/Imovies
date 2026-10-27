@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Booking } from '../types/cinema';
 import { api } from '../services/api';
 import { useToast } from '../context/ToastContext';
-import { Ticket, Calendar, Clock, MapPin, QrCode, AlertTriangle, ArrowRight } from 'lucide-react';
+import { LoyaltyWidget } from './LoyaltyWidget';
+import { Ticket, Calendar, Clock, MapPin, QrCode, AlertTriangle, ArrowRight, ArrowLeft, Award } from 'lucide-react';
 
 interface MyBookingsViewProps {
   bookings: Booking[];
@@ -50,9 +51,18 @@ export function MyBookingsView({
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Back to Movies button */}
+      <button
+        onClick={onBrowseMovies}
+        className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-amber-400 font-semibold mb-5 transition-colors group"
+      >
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        <span>Back to Movies</span>
+      </button>
+
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">
             My Cinema Bookings
@@ -86,6 +96,9 @@ export function MyBookingsView({
           </button>
         </div>
       </div>
+
+      {/* Loyalty Points Tracking Widget */}
+      <LoyaltyWidget onPointsRedeemedOrUpdated={onRefreshBookings} />
 
       {/* Bookings List */}
       {displayed.length === 0 ? (
@@ -122,9 +135,17 @@ export function MyBookingsView({
                 <div>
                   {/* Top Bar */}
                   <div className="flex items-center justify-between gap-2 mb-3">
-                    <span className="text-xs font-mono font-bold text-amber-400">
-                      {booking.bookingCode}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono font-bold text-amber-400">
+                        {booking.bookingCode}
+                      </span>
+                      {booking.loyaltyPointsEarned && isConfirmed && (
+                        <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-1.5 py-0.5 rounded flex items-center gap-1">
+                          <Award className="w-3 h-3" />
+                          <span>+{booking.loyaltyPointsEarned} pts</span>
+                        </span>
+                      )}
+                    </div>
                     <span
                       className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
                         isConfirmed

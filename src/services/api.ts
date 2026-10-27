@@ -1,4 +1,4 @@
-import { Movie, Theatre, Show, Booking, NotificationItem, AnalyticsSummary, User } from '../types/cinema';
+import { Movie, Theatre, Show, Booking, NotificationItem, AnalyticsSummary, User, LoyaltySummary, LoyaltyTransaction } from '../types/cinema';
 
 const API_BASE = '/api';
 
@@ -168,4 +168,8 @@ export const api = {
     request<{ success: boolean; message: string }>('/admin/reset-demo', {
       method: 'POST',
     }),
+
+  // Loyalty Program
+  getLoyaltySummary: () => request<LoyaltySummary>('/loyalty/summary'),
+  getLoyaltyHistory: () => request<LoyaltyTransaction[]>('/loyalty/history'),
 };

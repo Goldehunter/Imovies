@@ -186,32 +186,6 @@ function CinemaApp() {
         onOpenAuthModal={() => setAuthModalOpen(true)}
       />
 
-      {/* Floating Demo Role Banner */}
-      <div className="bg-slate-900/90 border-b border-slate-800/80 px-4 py-1.5 text-xs text-slate-400">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span className="font-medium text-slate-300">
-              Active Session: <strong className="text-white">{user?.name || 'Guest'}</strong> ({user?.role?.toUpperCase() || 'USER'})
-            </span>
-            <span className="hidden sm:inline text-slate-500">· Real-time seat locking active</span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="text-[11px] text-slate-400">Quick Persona:</span>
-            <button
-              onClick={() => {
-                switchRole(isAdmin ? 'user' : 'admin');
-                showToast(`Switched active role to ${isAdmin ? 'User' : 'Admin'}`, 'info');
-              }}
-              className="text-[11px] font-semibold text-amber-400 hover:text-amber-300 underline underline-offset-2"
-            >
-              Toggle to {isAdmin ? 'Cinephile User (Alex)' : 'Cinema Admin Console'}
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Main View Area */}
       <main className="flex-1">
         {/* VIEW 1: MOVIES BROWSER */}

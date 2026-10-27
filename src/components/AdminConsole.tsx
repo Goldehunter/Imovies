@@ -17,14 +17,16 @@ import {
   Search,
   CheckCircle2,
   XCircle,
+  ArrowLeft,
 } from 'lucide-react';
 
 interface AdminConsoleProps {
   theatres: Theatre[];
   onMovieAddedOrUpdated: () => void;
+  onBackToMovies?: () => void;
 }
 
-export function AdminConsole({ theatres, onMovieAddedOrUpdated }: AdminConsoleProps) {
+export function AdminConsole({ theatres, onMovieAddedOrUpdated, onBackToMovies }: AdminConsoleProps) {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<'analytics' | 'movies' | 'shows' | 'bookings'>('analytics');
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
@@ -187,7 +189,17 @@ export function AdminConsole({ theatres, onMovieAddedOrUpdated }: AdminConsolePr
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-slate-100">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-slate-100">
+      {onBackToMovies && (
+        <button
+          onClick={onBackToMovies}
+          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-amber-400 font-semibold mb-5 transition-colors group"
+        >
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          <span>Back to Movies</span>
+        </button>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
