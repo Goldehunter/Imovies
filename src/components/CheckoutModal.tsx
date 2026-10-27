@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Movie, Show, Theatre, Seat, Booking, LoyaltySummary } from '../types/cinema';
+import React, { useState } from 'react';
+import { Movie, Show, Theatre, Seat, Booking } from '../types/cinema';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { api } from '../services/api';
-import { X, CreditCard, ShieldCheck, Lock, Smartphone, Building, CheckCircle, Award, ArrowLeft } from 'lucide-react';
+import { X, CreditCard, ShieldCheck, Lock, Smartphone, Building, CheckCircle } from 'lucide-react';
 
 interface CheckoutModalProps {
   movie: Movie;
@@ -30,22 +30,6 @@ export function CheckoutModal({
   const [userEmail, setUserEmail] = useState(user?.email || 'alex@cinephile.com');
   const [userPhone, setUserPhone] = useState(user?.phone || '+1 (555) 392-8172');
 
-  // Loyalty Program State
-  const [loyaltySummary, setLoyaltySummary] = useState<LoyaltySummary | null>(null);
-  const [redeemPoints, setRedeemPoints] = useState<number>(0);
-
-  useEffect(() => {
-    async function loadLoyalty() {
-      try {
-        const sum = await api.getLoyaltySummary();
-        setLoyaltySummary(sum);
-      } catch (err) {
-        console.warn('Could not load loyalty summary in checkout:', err);
-      }
-    }
-    loadLoyalty();
-  }, []);
-
   // Card inputs
   const [cardNumber, setCardNumber] = useState('4242 •••• •••• 4242');
   const [cardExpiry, setCardExpiry] = useState('11/28');
@@ -61,13 +45,7 @@ export function CheckoutModal({
   const subtotal = selectedSeats.reduce((acc, s) => acc + s.price, 0);
   const convenienceFee = Number((selectedSeats.length * 1.75).toFixed(2));
   const tax = Number((subtotal * 0.08).toFixed(2));
-  const grossTotal = Number((subtotal + convenienceFee + tax).toFixed(2));
-  const loyaltyDiscount = Number((redeemPoints / 100).toFixed(2));
-  const totalAmount = Math.max(0, Number((grossTotal - loyaltyDiscount).toFixed(2)));
-
-  const estimatedPointsToEarn = Math.round(
-    totalAmount * 10 * (loyaltySummary?.tierMultiplier || 1)
-  );
+  const totalAmount = Number((subtotal + convenienceFee + tax).toFixed(2));
 
   const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,16 +78,11 @@ export function CheckoutModal({
         convenienceFee,
         tax,
         totalAmount,
-        loyaltyPointsRedeemed: redeemPoints,
-        loyaltyDiscount,
         paymentMethod,
       };
 
       const newBooking = await api.createBooking(bookingData);
-      showToast(
-        `Booking confirmed! You earned ${estimatedPointsToEarn} loyalty points.`,
-        'success'
-      );
+      showToast('Booking successfully confirmed!', 'success');
       onBookingSuccess(newBooking);
     } catch (err: any) {
       showToast(err.message || 'Payment processing failed', 'error');
@@ -123,16 +96,7 @@ export function CheckoutModal({
       <div className="bg-[#121622] border border-slate-800 rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl relative my-8">
         {/* Top Header */}
         <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors text-xs font-semibold border border-slate-700/60"
-              title="Back to seat selection"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back</span>
-            </button>
+          <div className="flex items-center gap-2.5">
             <div className="p-2 bg-amber-400/10 text-amber-400 rounded-lg">
               <ShieldCheck className="w-5 h-5" />
             </div>
@@ -184,118 +148,12 @@ export function CheckoutModal({
                 <span>Integrated State Cinema Tax</span>
                 <span className="font-mono text-slate-200">${tax.toFixed(2)}</span>
               </div>
-              {loyaltyDiscount > 0 && (
-                <div className="flex justify-between text-emerald-400 font-medium">
-                  <span className="flex items-center gap-1">
-                    <Award className="w-3.5 h-3.5" />
-                    <span>Loyalty Points Discount ({redeemPoints} pts)</span>
-                  </span>
-                  <span className="font-mono">-${loyaltyDiscount.toFixed(2)}</span>
-                </div>
-              )}
               <div className="flex justify-between pt-2 border-t border-slate-800 font-bold text-sm text-white">
                 <span>Total Payable</span>
                 <span className="font-mono text-amber-400 text-base">${totalAmount.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between pt-1 text-[11px] text-amber-300/80 font-medium">
-                <span>Points you will earn on this booking:</span>
-                <span className="font-mono text-amber-300 font-bold">+{estimatedPointsToEarn} pts</span>
-              </div>
             </div>
           </div>
-
-          {/* Loyalty Points Redemption Option */}
-          {loyaltySummary && loyaltySummary.totalPoints >= 100 && (
-            <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl space-y-2.5">
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-1.5 font-bold text-amber-400">
-                  <Award className="w-4 h-4" />
-                  <span>Redeem Loyalty Points for Discount</span>
-                </div>
-                <span className="text-[11px] text-slate-400 font-mono">
-                  Available: <strong className="text-white">{loyaltySummary.totalPoints.toLocaleString()}</strong> pts
-                </span>
-              </div>
-
-              <p className="text-[11px] text-slate-300">
-                Redeem 100 points for $1.00 instant discount off your ticket order.
-              </p>
-
-              <div className="flex flex-wrap items-center gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setRedeemPoints(0)}
-                  className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
-                    redeemPoints === 0
-                      ? 'bg-slate-700 text-white font-bold'
-                      : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
-                  }`}
-                >
-                  Don't use points
-                </button>
-
-                {loyaltySummary.totalPoints >= 250 && grossTotal >= 2.5 && (
-                  <button
-                    type="button"
-                    onClick={() => setRedeemPoints(250)}
-                    className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
-                      redeemPoints === 250
-                        ? 'bg-amber-400 text-slate-950 font-bold'
-                        : 'bg-slate-900 text-slate-300 hover:text-white border border-slate-800'
-                    }`}
-                  >
-                    250 pts (-$2.50)
-                  </button>
-                )}
-
-                {loyaltySummary.totalPoints >= 500 && grossTotal >= 5.0 && (
-                  <button
-                    type="button"
-                    onClick={() => setRedeemPoints(500)}
-                    className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
-                      redeemPoints === 500
-                        ? 'bg-amber-400 text-slate-950 font-bold'
-                        : 'bg-slate-900 text-slate-300 hover:text-white border border-slate-800'
-                    }`}
-                  >
-                    500 pts (-$5.00)
-                  </button>
-                )}
-
-                {loyaltySummary.totalPoints >= 1000 && grossTotal >= 10.0 && (
-                  <button
-                    type="button"
-                    onClick={() => setRedeemPoints(1000)}
-                    className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
-                      redeemPoints === 1000
-                        ? 'bg-amber-400 text-slate-950 font-bold'
-                        : 'bg-slate-900 text-slate-300 hover:text-white border border-slate-800'
-                    }`}
-                  >
-                    1,000 pts (-$10.00)
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const maxAffordablePoints = Math.floor(grossTotal * 100);
-                    const maxPoints = Math.min(loyaltySummary.totalPoints, maxAffordablePoints);
-                    // Round down to multiple of 100
-                    const cleanMax = Math.floor(maxPoints / 100) * 100;
-                    setRedeemPoints(cleanMax);
-                  }}
-                  className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
-                    redeemPoints > 1000 || (redeemPoints > 0 && redeemPoints !== 250 && redeemPoints !== 500 && redeemPoints !== 1000)
-                      ? 'bg-amber-400 text-slate-950 font-bold'
-                      : 'bg-slate-900 text-slate-300 hover:text-white border border-slate-800'
-                  }`}
-                >
-                  Max Available
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* Contact Details */}
           <div>
@@ -467,22 +325,20 @@ export function CheckoutModal({
           )}
 
           {/* Action buttons */}
-          <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-800">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
             <button
               type="button"
               onClick={onClose}
               disabled={isProcessing}
-              className="px-4 py-2 text-xs text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-700/80 rounded-xl transition-colors flex items-center gap-1.5 font-medium"
+              className="px-4 py-2 text-xs text-slate-400 hover:text-white transition-colors"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Seats</span>
+              Cancel
             </button>
-            <div className="flex items-center gap-2">
-              <button
-                type="submit"
-                disabled={isProcessing}
-                className="px-6 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl shadow-lg shadow-amber-400/20 text-xs transition-all flex items-center gap-2 disabled:opacity-50"
-              >
+            <button
+              type="submit"
+              disabled={isProcessing}
+              className="px-6 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl shadow-lg shadow-amber-400/20 text-xs transition-all flex items-center gap-2 disabled:opacity-50"
+            >
               {isProcessing ? (
                 <>
                   <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
@@ -494,8 +350,7 @@ export function CheckoutModal({
                   <span>Pay ${totalAmount.toFixed(2)} & Reserve</span>
                 </>
               )}
-              </button>
-            </div>
+            </button>
           </div>
         </form>
       </div>

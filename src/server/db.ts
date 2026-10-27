@@ -11,9 +11,6 @@ import {
   Booking,
   PaymentTransaction,
   NotificationItem,
-  LoyaltyTransaction,
-  LoyaltySummary,
-  LoyaltyTier,
 } from '../types/cinema';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -29,7 +26,6 @@ interface DatabaseSchema {
   bookings: Booking[];
   payments: PaymentTransaction[];
   notifications: NotificationItem[];
-  loyaltyLedger: LoyaltyTransaction[];
 }
 
 // Seat map helper
@@ -408,26 +404,6 @@ const initialNotifications: NotificationItem[] = [
   },
 ];
 
-const initialLoyaltyLedger: LoyaltyTransaction[] = [
-  {
-    id: 'ltx_demo_welcome',
-    userId: 'user_demo',
-    type: 'bonus',
-    points: 750,
-    description: 'IMovies Cinephile Welcome Bonus',
-    timestamp: '2026-10-20T10:00:00Z',
-  },
-  {
-    id: 'ltx_demo_101',
-    userId: 'user_demo',
-    type: 'earned',
-    points: 703,
-    description: 'Booking Odyssey of Stars (IMV-9428-TX)',
-    bookingId: 'bk_demo_101',
-    timestamp: '2026-10-26T14:20:06Z',
-  },
-];
-
 class CinemaDatabase {
   private data: DatabaseSchema;
 
@@ -447,9 +423,6 @@ class CinemaDatabase {
         const raw = fs.readFileSync(DB_FILE, 'utf-8');
         const parsed = JSON.parse(raw);
         if (parsed.movies && parsed.shows && parsed.users) {
-          if (!parsed.loyaltyLedger) {
-            parsed.loyaltyLedger = initialLoyaltyLedger;
-          }
           return parsed;
         }
       }
@@ -465,7 +438,6 @@ class CinemaDatabase {
       bookings: initialBookings,
       payments: initialPayments,
       notifications: initialNotifications,
-      loyaltyLedger: initialLoyaltyLedger,
     };
     this.save(defaultData);
     return defaultData;
@@ -701,32 +673,6 @@ class CinemaDatabase {
       link: '/dashboard',
     });
 
-    // Calculate and award loyalty points
-    const loyaltySummary = this.getLoyaltySummary(booking.userId);
-    const basePoints = Math.round(booking.totalAmount * 10);
-    const earnedPoints = Math.round(basePoints * loyaltySummary.tierMultiplier);
-    booking.loyaltyPointsEarned = earnedPoints;
-
-    // If points were redeemed for a discount
-    if (booking.loyaltyPointsRedeemed && booking.loyaltyPointsRedeemed > 0) {
-      this.addLoyaltyTransaction({
-        userId: booking.userId,
-        type: 'redeemed',
-        points: -booking.loyaltyPointsRedeemed,
-        description: `Redeemed for $${(booking.loyaltyPointsRedeemed / 100).toFixed(2)} discount on ${booking.movieTitle} (${booking.bookingCode})`,
-        bookingId: booking.id,
-      });
-    }
-
-    // Award earned points
-    this.addLoyaltyTransaction({
-      userId: booking.userId,
-      type: 'earned',
-      points: earnedPoints,
-      description: `Earned on booking "${booking.movieTitle}" (${booking.bookingCode})`,
-      bookingId: booking.id,
-    });
-
     this.save();
     return booking;
   }
@@ -756,28 +702,6 @@ class CinemaDatabase {
       show.bookedSeatsCount = Object.values(show.seats).filter((s) => s.status === 'booked').length;
     }
 
-    // Reverse earned loyalty points
-    if (booking.loyaltyPointsEarned && booking.loyaltyPointsEarned > 0) {
-      this.addLoyaltyTransaction({
-        userId: booking.userId,
-        type: 'reversed',
-        points: -booking.loyaltyPointsEarned,
-        description: `Points reversed due to booking cancellation (${booking.bookingCode})`,
-        bookingId: booking.id,
-      });
-    }
-
-    // Refund redeemed loyalty points back to user balance
-    if (booking.loyaltyPointsRedeemed && booking.loyaltyPointsRedeemed > 0) {
-      this.addLoyaltyTransaction({
-        userId: booking.userId,
-        type: 'bonus',
-        points: booking.loyaltyPointsRedeemed,
-        description: `Redeemed points refunded on cancellation (${booking.bookingCode})`,
-        bookingId: booking.id,
-      });
-    }
-
     // Add cancellation notification
     this.data.notifications.unshift({
       id: `notif_${Date.now()}`,
@@ -791,88 +715,6 @@ class CinemaDatabase {
 
     this.save();
     return booking;
-  }
-
-  // --- LOYALTY PROGRAM METHODS ---
-  public getLoyaltySummary(userId: string): LoyaltySummary {
-    const userTxs = (this.data.loyaltyLedger || []).filter((tx) => tx.userId === userId);
-    const totalPoints = userTxs.reduce((sum, tx) => sum + tx.points, 0);
-    const lifetimeEarned = userTxs
-      .filter((tx) => tx.points > 0)
-      .reduce((sum, tx) => sum + tx.points, 0);
-
-    let tier: LoyaltyTier = 'bronze';
-    let tierName = 'Bronze Reel';
-    let tierMultiplier = 1.0;
-    let nextTier: LoyaltyTier | undefined = 'silver';
-    let nextTierName: string | undefined = 'Silver Screen';
-    let nextTierThreshold: number | undefined = 1000;
-    let pointsToNextTier = Math.max(0, 1000 - totalPoints);
-    let progressPercent = Math.min(100, Math.round((totalPoints / 1000) * 100));
-
-    if (totalPoints >= 5000) {
-      tier = 'platinum';
-      tierName = 'Platinum Premier';
-      tierMultiplier = 1.5;
-      nextTier = undefined;
-      nextTierName = undefined;
-      nextTierThreshold = undefined;
-      pointsToNextTier = 0;
-      progressPercent = 100;
-    } else if (totalPoints >= 2500) {
-      tier = 'gold';
-      tierName = 'Gold Marquee';
-      tierMultiplier = 1.25;
-      nextTier = 'platinum';
-      nextTierName = 'Platinum Premier';
-      nextTierThreshold = 5000;
-      pointsToNextTier = 5000 - totalPoints;
-      progressPercent = Math.min(100, Math.round(((totalPoints - 2500) / 2500) * 100));
-    } else if (totalPoints >= 1000) {
-      tier = 'silver';
-      tierName = 'Silver Screen';
-      tierMultiplier = 1.1;
-      nextTier = 'gold';
-      nextTierName = 'Gold Marquee';
-      nextTierThreshold = 2500;
-      pointsToNextTier = 2500 - totalPoints;
-      progressPercent = Math.min(100, Math.round(((totalPoints - 1000) / 1500) * 100));
-    }
-
-    return {
-      userId,
-      totalPoints: Math.max(0, totalPoints),
-      lifetimeEarned,
-      tier,
-      tierName,
-      tierMultiplier,
-      nextTier,
-      nextTierName,
-      nextTierThreshold,
-      pointsToNextTier,
-      progressPercent,
-      cashValue: Number((Math.max(0, totalPoints) / 100).toFixed(2)),
-    };
-  }
-
-  public getLoyaltyHistory(userId: string) {
-    return (this.data.loyaltyLedger || [])
-      .filter((tx) => tx.userId === userId)
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  }
-
-  public addLoyaltyTransaction(tx: Omit<LoyaltyTransaction, 'id' | 'timestamp'>) {
-    if (!this.data.loyaltyLedger) {
-      this.data.loyaltyLedger = [];
-    }
-    const newTx: LoyaltyTransaction = {
-      ...tx,
-      id: `ltx_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-      timestamp: new Date().toISOString(),
-    };
-    this.data.loyaltyLedger.unshift(newTx);
-    this.save();
-    return newTx;
   }
 
   // Notifications
@@ -965,7 +807,6 @@ class CinemaDatabase {
       bookings: initialBookings,
       payments: initialPayments,
       notifications: initialNotifications,
-      loyaltyLedger: initialLoyaltyLedger,
     };
     this.save();
     return true;

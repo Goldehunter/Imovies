@@ -181,12 +181,10 @@ export function Navbar({
                       onSelectTab('bookings');
                       setProfileDropdownOpen(false);
                     }}
-                    className="w-full text-left px-4 py-2 text-slate-300 hover:bg-slate-800/80 hover:text-white flex items-center justify-between"
+                    className="w-full text-left px-4 py-2 text-slate-300 hover:bg-slate-800/80 hover:text-white flex items-center gap-2"
                   >
-                    <div className="flex items-center gap-2">
-                      <Ticket className="w-3.5 h-3.5 text-amber-400" />
-                      <span>My Bookings & Rewards</span>
-                    </div>
+                    <Ticket className="w-3.5 h-3.5 text-amber-400" />
+                    <span>My Cinema Bookings</span>
                   </button>
 
                   {isAdmin && (

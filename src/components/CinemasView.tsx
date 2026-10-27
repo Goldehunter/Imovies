@@ -1,26 +1,15 @@
 import React from 'react';
 import { Theatre } from '../types/cinema';
-import { MapPin, Sparkles, Film, ArrowRight, ArrowLeft } from 'lucide-react';
+import { MapPin, Sparkles, Film, ArrowRight } from 'lucide-react';
 
 interface CinemasViewProps {
   theatres: Theatre[];
   onSelectTheatre: (theatre: Theatre) => void;
-  onBack?: () => void;
 }
 
-export function CinemasView({ theatres, onSelectTheatre, onBack }: CinemasViewProps) {
+export function CinemasView({ theatres, onSelectTheatre }: CinemasViewProps) {
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {onBack && (
-        <button
-          onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-amber-400 font-semibold mb-5 transition-colors group"
-        >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          <span>Back to Movies</span>
-        </button>
-      )}
-
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">
           Our Partner Cinemas & Premium Auditoriums

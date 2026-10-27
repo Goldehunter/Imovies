@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Movie, Show, Theatre } from '../types/cinema';
 import { api } from '../services/api';
-import { X, Star, Clock, Calendar, Film, MapPin, Sparkles, ArrowLeft } from 'lucide-react';
+import { X, Star, Clock, Calendar, Film, MapPin, Sparkles } from 'lucide-react';
 
 interface MovieDetailsModalProps {
   movie: Movie;
@@ -51,37 +51,8 @@ export function MovieDetailsModal({
     loadShows();
   }, [movie.id, selectedDate]);
 
-  // Keyboard escape listener to return back to previous page
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
-
   return (
-    <div
-      className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          onClose();
-        }
-      }}
-    >
-      {/* Viewport Top-Left Back Arrow Button (always visible on screen) */}
-      <button
-        onClick={onClose}
-        className="fixed top-4 left-4 z-[60] flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-200 hover:text-white transition-all text-xs font-semibold backdrop-blur-md shadow-2xl group cursor-pointer"
-        title="Back to Movies Homepage"
-        aria-label="Back to previous page"
-      >
-        <ArrowLeft className="w-4 h-4 text-amber-400 group-hover:-translate-x-1 transition-transform" />
-        <span>Back to Movies</span>
-      </button>
-
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
       <div className="bg-[#10131d] border border-slate-800 rounded-2xl max-w-3xl w-full overflow-hidden shadow-2xl relative my-8 text-slate-100">
         {/* Backdrop Header */}
         <div className="relative h-64 sm:h-72 w-full overflow-hidden">
@@ -93,23 +64,10 @@ export function MovieDetailsModal({
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#10131d] via-[#10131d]/60 to-transparent" />
 
-          {/* Modal Header Back button at top left */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 left-4 z-20 flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-slate-700/80 text-slate-200 hover:text-white transition-all text-xs font-semibold backdrop-blur-md shadow-lg group cursor-pointer"
-            title="Back to Movies Homepage"
-            aria-label="Back to Movies"
-          >
-            <ArrowLeft className="w-4 h-4 text-amber-400 group-hover:-translate-x-1 transition-transform" />
-            <span>Back to Movies</span>
-          </button>
-
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-20 p-2 rounded-full bg-slate-950/60 hover:bg-slate-900 text-slate-300 hover:text-white transition-colors cursor-pointer"
-            title="Close modal"
-            aria-label="Close"
+            className="absolute top-4 right-4 p-2 rounded-full bg-slate-950/60 hover:bg-slate-900 text-slate-300 hover:text-white transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
