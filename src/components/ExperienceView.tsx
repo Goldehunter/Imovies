@@ -1,5 +1,5 @@
 import React from 'react';
-import { Film, Volume2, Eye, Sparkles } from 'lucide-react';
+import { Film, Volume2, Eye, Sparkles, ArrowLeft } from 'lucide-react';
 
 export function ExperienceView({ onExploreMovies }: { onExploreMovies: () => void }) {
   const formats = [
@@ -30,7 +30,15 @@ export function ExperienceView({ onExploreMovies }: { onExploreMovies: () => voi
   ];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-slate-100">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-slate-100">
+      <button
+        onClick={onExploreMovies}
+        className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-amber-400 font-semibold mb-5 transition-colors group"
+      >
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        <span>Back to Movies</span>
+      </button>
+
       <div className="max-w-2xl mb-10">
         <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">
           State-of-the-Art Cinema Experiences

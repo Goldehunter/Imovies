@@ -99,6 +99,33 @@ export interface BookingSeat {
   price: number;
 }
 
+export type LoyaltyTier = 'bronze' | 'silver' | 'gold' | 'platinum';
+
+export interface LoyaltyTransaction {
+  id: string;
+  userId: string;
+  type: 'earned' | 'redeemed' | 'reversed' | 'bonus';
+  points: number; // positive or negative
+  description: string;
+  bookingId?: string;
+  timestamp: string;
+}
+
+export interface LoyaltySummary {
+  userId: string;
+  totalPoints: number;
+  lifetimeEarned: number;
+  tier: LoyaltyTier;
+  tierName: string;
+  tierMultiplier: number;
+  nextTier?: LoyaltyTier;
+  nextTierName?: string;
+  nextTierThreshold?: number;
+  pointsToNextTier: number;
+  progressPercent: number;
+  cashValue: number; // e.g. 1450 pts = $14.50
+}
+
 export interface Booking {
   id: string;
   bookingCode: string; // 'IMV-7492-X'
@@ -122,6 +149,9 @@ export interface Booking {
   convenienceFee: number;
   tax: number;
   totalAmount: number;
+  loyaltyPointsEarned?: number;
+  loyaltyPointsRedeemed?: number;
+  loyaltyDiscount?: number;
   paymentMethod: string;
   paymentStatus: PaymentStatus;
   bookingStatus: BookingStatus;

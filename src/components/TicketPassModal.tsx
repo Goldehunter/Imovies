@@ -112,6 +112,11 @@ export function TicketPassModal({
               <span className="font-mono font-bold text-white text-base">
                 ${booking.totalAmount.toFixed(2)}
               </span>
+              {booking.loyaltyPointsEarned && (
+                <span className="text-[10px] text-emerald-400 font-mono block">
+                  +{booking.loyaltyPointsEarned} pts earned
+                </span>
+              )}
             </div>
           </div>
 

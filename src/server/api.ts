@@ -374,6 +374,8 @@ apiRouter.post('/bookings', requireAuth, (req: AuthenticatedRequest, res: Respon
     convenienceFee: Number(convenienceFee) || 3.5,
     tax: Number(tax) || 4.2,
     totalAmount: Number(totalAmount) || 0,
+    loyaltyPointsRedeemed: Number(req.body.loyaltyPointsRedeemed) || 0,
+    loyaltyDiscount: Number(req.body.loyaltyDiscount) || 0,
     paymentMethod: paymentMethod || 'card',
     paymentStatus: 'completed',
     bookingStatus: 'confirmed',
@@ -383,6 +385,17 @@ apiRouter.post('/bookings', requireAuth, (req: AuthenticatedRequest, res: Respon
 
   const created = db.createBooking(booking);
   res.status(201).json(created);
+});
+
+// --- LOYALTY PROGRAM ENDPOINTS ---
+apiRouter.get('/loyalty/summary', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+  const summary = db.getLoyaltySummary(req.user!.id);
+  res.json(summary);
+});
+
+apiRouter.get('/loyalty/history', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+  const history = db.getLoyaltyHistory(req.user!.id);
+  res.json(history);
 });
 
 apiRouter.post('/bookings/:id/cancel', requireAuth, (req: AuthenticatedRequest, res: Response) => {

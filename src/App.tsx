@@ -488,6 +488,7 @@ function CinemaApp() {
             onSelectTheatre={(_theatre) => {
               setCurrentTab('movies');
             }}
+            onBack={() => setCurrentTab('movies')}
           />
         )}
 
@@ -514,6 +515,7 @@ function CinemaApp() {
               loadInitialData();
               loadUserData();
             }}
+            onBackToMovies={() => setCurrentTab('movies')}
           />
         )}
       </main>
@@ -553,7 +555,11 @@ function CinemaApp() {
             show={activeShowForSeats.show}
             movie={activeShowForSeats.movie}
             theatre={activeShowForSeats.theatre}
-            onBack={() => setActiveShowForSeats(null)}
+            onBack={() => {
+              const prevMovie = activeShowForSeats.movie;
+              setActiveShowForSeats(null);
+              setSelectedMovieForDetails(prevMovie);
+            }}
             onProceedToCheckout={handleProceedToCheckout}
             onLockSeats={handleLockSeats}
           />
